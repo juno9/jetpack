@@ -1,4 +1,4 @@
-package com.example.jetpackcompose
+package com.example.jetpackcompose.Activities
 
 import android.content.Context
 import android.content.Intent
@@ -7,9 +7,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,30 +17,31 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.jetpackcompose.R
 import com.example.jetpackcompose.ui.theme.JetpackcomposeTheme
+import com.example.jetpackcompose.utils.networkObject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
-import java.io.OutputStream
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.net.HttpURLConnection
 import java.net.URL
 
+
 @Serializable
-data class LoginRequest(val email: String, val password: String)
-class MainActivity : ComponentActivity() {
+data class LoginRequest(val user_email: String, val user_password: String)
+class Activity_Login : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             JetpackcomposeTheme {
-                MyApp(modifier = Modifier.fillMaxSize())
+                LoginScreen(modifier = Modifier.fillMaxSize())
             }
         }
     }
@@ -50,7 +49,9 @@ class MainActivity : ComponentActivity() {
 
 @Preview
 @Composable
-fun MyApp(modifier: Modifier = Modifier) {
+
+fun LoginScreen(modifier: Modifier = Modifier) {
+    val context = LocalContext.current // Context를 가져옴
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -94,7 +95,7 @@ fun MyApp(modifier: Modifier = Modifier) {
 
         // 로그인 버튼
         Button(
-            onClick = { performLogin(LoginRequest(email, password)) },
+            onClick = { performLogin(context, LoginRequest(email, password)) },
             modifier = Modifier
                 .width(300.dp)
                 .height(48.dp)
@@ -135,13 +136,9 @@ fun MyApp(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
         ) {
-            TextButton(onClick = {
-
-
-            }
-            )
-            {
+            TextButton(onClick = { SignUp(context) }) {
                 Text("회원가입")
+
             }
             TextButton(onClick = { /* 비밀번호 찾기 액션 */ }) {
                 Text("비밀번호 찾기")
@@ -150,36 +147,53 @@ fun MyApp(modifier: Modifier = Modifier) {
     }
 }
 
-fun performLogin(loginRequest: LoginRequest) {
-    // 코루틴을 통해 네트워크 통신 비동기 처리
+fun SignUp(context: Context){
     CoroutineScope(Dispatchers.IO).launch {
-        val url = URL("http://192.168.110.93//login.php") // 서버 URL을 여기에 넣으세요
-        val jsonBody = Json.encodeToString(LoginRequest.serializer(), loginRequest) // 직렬화 부분 수정
-        Log.d("LoginRequest", "Sending JSON data: $jsonBody")
+        CoroutineScope(Dispatchers.Main).launch {
+            val intent = Intent(context, Activity_Signup::class.java)
+            context.startActivity(intent)
+        }
+    }
+}
+fun performLogin(context: Context, loginRequest: LoginRequest) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val urlString = networkObject.getBaseUrl()+"/login.php"
+        val url = URL(urlString)
+        val postData = "user_email=${loginRequest.user_email}&user_password=${loginRequest.user_password}"
 
-        // HTTP 통신 설정
         with(url.openConnection() as HttpURLConnection) {
             requestMethod = "POST"
-            setRequestProperty("Content-Type", "application/json; utf-8")
+            setRequestProperty("Content-Type", "application/x-www-form-urlencoded; utf-8")
             doOutput = true
 
-            // JSON 데이터 전송
-            val outputStream: OutputStream = outputStream
-            outputStream.write(jsonBody.toByteArray())
+            // 데이터 전송
+            outputStream.write(postData.toByteArray())
             outputStream.flush()
             outputStream.close()
 
             val responseCode = responseCode
-            val responseMessage = inputStream.bufferedReader().use { it.readText() } // 응답 데이터 읽기
+            val responseMessage = inputStream.bufferedReader().use { it.readText() }
             Log.d("LoginRequest", "Response Code: $responseCode")
             Log.d("LoginRequest", "Response Message: $responseMessage")
-            // 응답 처리 (예시)
+
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                // 로그인 성공
-                Log.d("LoginRequest", "응답 받음, message: "+responseMessage)
+                val responseJson = Json.parseToJsonElement(responseMessage).jsonObject
+                val status = responseJson["status"]?.jsonPrimitive?.content
+                val message = responseJson["message"]?.jsonPrimitive?.content
+
+                if (status == "success") {
+                    Log.d("LoginRequest", "Login successful: $message")
+
+                    // MainActivity로 이동
+                    CoroutineScope(Dispatchers.Main).launch {
+                        val intent = Intent(context, Activity_Main::class.java)
+                        context.startActivity(intent)
+                    }
+                } else {
+                    Log.d("LoginRequest", "Login failed: $message")
+                }
             } else {
-                // 로그인 실패
-                Log.d("LoginRequest", "응답 못받음: $responseCode")
+                Log.d("LoginRequest", "HTTP error: $responseCode")
             }
         }
     }
@@ -188,9 +202,14 @@ fun performLogin(loginRequest: LoginRequest) {
 
 
 
+
+
+
+
+
 @Composable
 fun GreetingPreview() {
     JetpackcomposeTheme {
-        MyApp()
+        LoginScreen()
     }
 }

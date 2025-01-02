@@ -1,24 +1,23 @@
-package com.example.jetpackcompose
+package com.example.jetpackcompose.Activities
 
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import com.example.jetpackcompose.R
 import com.example.jetpackcompose.ui.theme.JetpackcomposeTheme
 import kotlinx.coroutines.delay
 
-class SplashActivity : ComponentActivity() {
+class Activity_Splash : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,7 +35,7 @@ class SplashActivity : ComponentActivity() {
         LaunchedEffect(key1 = true) {
             delay(2000)
 
-            context.startActivity(Intent(context, MainActivity::class.java))
+            context.startActivity(Intent(context, Activity_Login::class.java))
         }
 
         Box(
