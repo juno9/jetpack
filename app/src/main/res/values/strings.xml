@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">jetpackcompose</string>
+    <string name="naver_app_id">A3h5tbBmdgmb9WBLMbVf</string>
+    <string name="naver_app_password">6x_U8O2_C8</string>
+    <string name="naver_app_name">KOCOA</string>
 </resources>

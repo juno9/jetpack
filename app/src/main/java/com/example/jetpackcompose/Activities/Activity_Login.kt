@@ -1,9 +1,12 @@
 package com.example.jetpackcompose.Activities
 
+
+
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -22,7 +25,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.jetpackcompose.R
 import com.example.jetpackcompose.ui.theme.JetpackcomposeTheme
+import com.example.jetpackcompose.utils.NaverLoginHandler
 import com.example.jetpackcompose.utils.networkObject
+import com.navercorp.nid.NaverIdLoginSDK
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -41,16 +46,59 @@ class Activity_Login : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             JetpackcomposeTheme {
-                LoginScreen(modifier = Modifier.fillMaxSize())
+                LoginScreen(
+                    modifier = Modifier.fillMaxSize())
             }
         }
     }
 }
+fun initializeNaverLoginSDKFromResources(context: Context) {
+    try {
+        // strings.xml에서 값 읽기
+        val clientId = context.getString(R.string.naver_app_id)
+        val clientSecret = context.getString(R.string.naver_app_password)
+        val clientName = context.getString(R.string.naver_app_name)
+
+        // 네이버 로그인 SDK 초기화
+        NaverIdLoginSDK.initialize(
+            context,
+            clientId,
+            clientSecret,
+            clientName
+        )
+    } catch (e: Exception) {
+        e.printStackTrace()
+        Toast.makeText(context, "네이버 로그인 초기화 중 오류 발생", Toast.LENGTH_SHORT).show()
+    }
+}
+@Composable
+fun NaverLoginButton(
+    onLoginSuccess: (String) -> Unit,
+    onLoginFailure: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+
+    Button(
+        onClick = {
+            initializeNaverLoginSDKFromResources(context) // strings.xml에서 초기화
+            NaverIdLoginSDK.authenticate(context, NaverLoginHandler(onLoginSuccess, onLoginFailure))
+        },
+        modifier = modifier
+            .fillMaxWidth()
+            .height(48.dp),
+        colors = ButtonDefaults.buttonColors(Color(0xFF03C75A)) // 네이버 색상
+    ) {
+        Text(text = "네이버 로그인", color = Color.White)
+    }
+}
+
+
 
 @Preview
 @Composable
-
-fun LoginScreen(modifier: Modifier = Modifier) {
+fun LoginScreen(
+    modifier: Modifier = Modifier) {
     val context = LocalContext.current // Context를 가져옴
     Column(
         modifier = modifier
@@ -119,15 +167,25 @@ fun LoginScreen(modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(16.dp))
 
         // 네이버 로그인 버튼
-        Button(
-            onClick = { /* 네이버 로그인 액션 */ },
-            modifier = Modifier
-                .width(300.dp)
-                .height(48.dp),
-            colors = ButtonDefaults.buttonColors(Color(0xFF03C75A)) // 네이버 색상
-        ) {
-            Text("네이버 로그인")
-        }
+        // 네이버 로그인 버튼
+        NaverLoginButton(
+            onLoginSuccess = { token ->
+                Toast.makeText(context, "Login Successful: $token", Toast.LENGTH_SHORT).show()
+                // 이후 처리 (e.g., 서버에 토큰 전달)
+            },
+            onLoginFailure = { error ->
+                Toast.makeText(context, "Login Failed: $error", Toast.LENGTH_SHORT).show()
+            }
+        )
+//        Button(
+//            onClick = {  naverLogin(context) },
+//            modifier = Modifier
+//                .width(300.dp)
+//                .height(48.dp),
+//            colors = ButtonDefaults.buttonColors(Color(0xFF03C75A)) // 네이버 색상
+//        ) {
+//            Text("네이버 로그인")
+//        }
 
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -207,9 +265,3 @@ fun performLogin(context: Context, loginRequest: LoginRequest) {
 
 
 
-@Composable
-fun GreetingPreview() {
-    JetpackcomposeTheme {
-        LoginScreen()
-    }
-}

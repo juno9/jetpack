@@ -5,6 +5,15 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <meta-data
+        android:name="com.navercorp.sdk.OAUTH_CLIENT_ID"
+        android:value="A3h5tbBmdgmb9WBLMbVf" />
+    <meta-data
+        android:name="com.navercorp.sdk.OAUTH_CLIENT_SECRET"
+        android:value="6x_U8O2_C8" />
+    <meta-data
+        android:name="com.navercorp.sdk.OAUTH_CLIENT_NAME"
+        android:value="KOCOA" />
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -34,6 +43,9 @@
             android:exported="false" />
         <activity
             android:name=".Activities.Activity_Login"
+            android:exported="false" />
+        <activity
+            android:name=".Activities.Activity_Signup"
             android:exported="false" />
 
     </application>
